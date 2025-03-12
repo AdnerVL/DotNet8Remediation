@@ -3,42 +3,55 @@
 This project provides scripts to detect and remediate the absence of the .NET 8.0 SDK on Windows devices using Intune and Winget. It includes a Win32 app deployment for Winget to ensure it’s available in SYSTEM context.
 
 ## Prerequisites
+
 - **Intune Access**: Administrative rights to create Win32 apps and remediation policies.
+
 - **Winget Source**: Extracted `winget.exe` and its dependencies from an installed instance.
+
 - **Test Machine**: Windows 10 1809+ or Windows 11, 64-bit.
-- **Tools**: 
+
+- **Tools**:
   - `IntuneWinAppUtil.exe` (download from [Microsoft](https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool)).
   - `PsExec` (optional, for local testing) from [Sysinternals](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec).
 
 ## Step 1: Extract Winget and Dependencies
+
 1. **Install Winget on a Test Machine**:
    - Download `Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle` from [GitHub](https://github.com/microsoft/winget-cli/releases/latest).
    - Install manually (e.g., double-click or use `Add-AppxPackage` in user context).
+
 2. **Copy Files**:
    - Navigate to `C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*_*` (e.g., `Microsoft.DesktopAppInstaller_2025.228.315.0_neutral_~_8wekyb3d8bbwe`).
    - Copy all contents (e.g., `winget.exe`, `msvcp140.dll`, `vcruntime140.dll`) to a local folder, e.g., `C:\Tools\WingetSource`.
 
 ## Step 2: Deploy Winget as a Win32 App
+
 1. **Package Winget**:
    - Place all files from `C:\Tools\WingetSource` into `C:\Tools\Intune`.
    - Run from `C:\Tools\Microsoft-Win32-Content-Prep-Tool\Microsoft-Win32-Content-Prep-Tool-1.8.6`:
+
      ```cmd
      .\IntuneWinAppUtil.exe -c C:\Tools\Intune -s winget.exe -o C:\Tools\Intune\Out
      ```
+
    - Output: C:\Tools\Intune\Out\winget.intunewin.
+
 2. **Create Win32 App in Intune**:
    - Intune: Apps > All apps > Add > Windows app (Win32).
    - Upload: winget.intunewin.
    - Program:
      - Install:
+
      ```powershell
       powershell.exe -ExecutionPolicy Bypass -Command "New-Item -Path 'C:\Tools\winget' -ItemType Directory -Force; Copy-Item -Path '.\*' -Destination 'C:\Tools\winget' -Recurse -Force"
       ```
 
      - Uninstall:
+
       ```powershell
        powershell.exe -ExecutionPolicy Bypass -Command "Remove-Item -Path 'C:\Tools\winget' -Recurse -Force"
       ```
+
    - Requirements: Windows 10 1809+, 64-bit.
    - Detection Rule:
      - Type: File
@@ -48,15 +61,12 @@ This project provides scripts to detect and remediate the absence of the .NET 8.
    - Assignments: Assign as Required to your device group (SYSTEM context).
 3. **Deploy**:
  Sync devices via Company Portal to install Winget to `C:\Tools\winget`.
-Step 3: Prepare Remediation Scripts
-Detection Script (Detection-net-8-sdk.ps1):
-powershell
 
-Collapse
+## Step 3: Prepare Remediation Scripts
 
-Wrap
+1. **Detection Script (Detection-net-8-sdk.ps1)**:
 
-Copy
+```powershell
 try {
     $sdks = dotnet --list-sdks
     if ($sdks -match "8.0") {
@@ -67,14 +77,11 @@ try {
 } catch {
     exit 1  # Error occurred
 }
-Remediation Script (Remediation-net-8-sdk.ps1):
-powershell
+```
 
-Collapse
+2. **Remediation Script (Remediation-net-8-sdk.ps1)**:
 
-Wrap
-
-Copy
+```powershell
 Write-Output "Starting .NET 8.0 SDK remediation..."
 try {
     $sdks = dotnet --list-sdks
@@ -105,6 +112,8 @@ try {
     Write-Error "Install error: $_"
     exit 1
 }
+```
+
 Step 4: Deploy Remediation in Intune
 Create Remediation:
 Intune: Devices > Scripts and remediations > Remediation > Create.
