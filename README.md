@@ -114,29 +114,46 @@ try {
 }
 ```
 
-Step 4: Deploy Remediation in Intune
-Create Remediation:
-Intune: Devices > Scripts and remediations > Remediation > Create.
-Name: "Install .NET 8.0 SDK".
-Detection Script: Upload Detection-net-8-sdk.ps1.
-Remediation Script: Upload Remediation-net-8-sdk.ps1.
-Settings:
-Run as logged-on credentials: No (SYSTEM context).
-Enforce signature check: No.
-Run in 64-bit PowerShell: Yes.
-Assignments: Assign to your device group.
-Sync Devices: Use Company Portal to sync and apply the remediation.
-Step 5: Test and Verify
-Local Test:
-Run psexec -s powershell on a test machine.
-Execute: C:\Tools\Git\DotNet8Remediation\Remediation-net-8-sdk.ps1.
-Verify: dotnet --list-sdks lists a version like 8.0.407.
-Intune Logs:
-Check C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log for execution details.
-Troubleshooting
-Winget Fails (-1073741515): Ensure all dependencies (e.g., msvcp140.dll) are included in C:\Tools\WingetSource.
-Detection Errors: Confirm script names are correct in Intune (Detection-net-8-sdk.ps1, Remediation-net-8-sdk.ps1).
-No Install: Verify Winget Win32 app deployed successfully before remediation runs.
-Notes
-Dependencies: winget.exe requires runtime DLLs from its original folder. Include all files from Microsoft.DesktopAppInstaller_*_*.
-Version: This installs the latest .NET 8.0 SDK (e.g., 8.0.407 as of testing).
+## Step 4: Deploy Remediation in Intune
+
+1. **Create Remediation**:
+
+   - Intune: Devices > Scripts and remediations > Remediation > Create.
+   - Name: "Install .NET 8.0 SDK".
+   - Detection Script: Upload `Detection-net-8-sdk.ps1`.
+   - Remediation Script: Upload `Remediation-net-8-sdk.ps1`.
+   - Settings:
+      - Run as logged-on credentials: No (SYSTEM context).
+      - Enforce signature check: No.
+      - Run in 64-bit PowerShell: Yes.
+   - Assignments: Assign to your device group.
+
+2. **Sync Devices**: 
+
+  Use Company Portal to sync and apply the remediation.
+
+## Step 5: Test and Verify
+
+1. Local Test:
+
+   - Run `psexec -s powershell` on a test machine.
+   - Execute: `C:\Tools\Git\DotNet8Remediation\Remediation-net-8-sdk.ps1`.
+   - Verify: `dotnet --list-sdks lists` a version like `8.0.407`.
+
+2. Intune Logs:
+
+   - Check `C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log` for execution details.
+
+## Troubleshooting
+
+   - Winget Fails (-1073741515): Ensure all dependencies (e.g., `msvcp140.dll`) are included in `C:\Tools\WingetSource`.
+
+   - Detection Errors: Confirm script names are correct in Intune (`Detection-net-8-sdk.ps1, Remediation-net-8-sdk.ps1`).
+
+   - No Install: Verify Winget Win32 app deployed successfully before remediation runs.
+
+## Notes
+
+   - Dependencies: `winget.exe` requires runtime DLLs from its original folder. Include all files from `Microsoft.DesktopAppInstaller_*_*`.
+
+   - Version: This installs the latest .NET 8.0 SDK (e.g., 8.0.407 as of testing).
