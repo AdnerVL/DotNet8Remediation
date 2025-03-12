@@ -1,35 +1,41 @@
 <#
 .SYNOPSIS
-    Installs .NET 8.0 SDK with Winget if missing.
+    Installs .NET 8.0 SDK using Winget from C:\Tools\winget.
 #>
 
 Write-Output "Starting .NET 8.0 SDK remediation..."
 
-# Check if SDK is already installed
+# Check if SDK is installed
 try {
     $sdks = dotnet --list-sdks
-    Write-Output "SDKs found: $sdks"
     if ($sdks -match "8.0") {
         Write-Output "SDK 8.0 already installed"
-        exit 0  # Success, no action needed
+        exit 0
     }
 } catch {
     Write-Output "Error checking SDK: $_"
 }
 
-# Install if not found
-Write-Output "Installing .NET 8.0 SDK via Winget..."
+# Define Winget path
+$wingetPath = "C:\Tools\winget\winget.exe"
+if (-not (Test-Path $wingetPath)) {
+    Write-Error "Winget not found at $wingetPath. Ensure Winget is deployed."
+    exit 1
+}
+Write-Output "Winget located at $wingetPath"
+
+# Install .NET 8.0 SDK
+Write-Output "Installing .NET 8.0 SDK with Winget..."
 try {
-    winget install --id Microsoft.DotNet.SDK.8 --silent --accept-source-agreements --accept-package-agreements
-    Write-Output "Winget exit code: $LASTEXITCODE"
+    & $wingetPath install --id Microsoft.DotNet.SDK.8 --silent --accept-source-agreements --accept-package-agreements
     if ($LASTEXITCODE -eq 0) {
-        Write-Output "SDK 8.0 installed successfully"
-        exit 0  # Success
+        Write-Output "SDK 8.0 installed"
+        exit 0
     } else {
-        Write-Output "Winget failed with exit code: $LASTEXITCODE"
-        exit 1  # Failure
+        Write-Error "Winget failed: $LASTEXITCODE"
+        exit 1
     }
 } catch {
-    Write-Output "Error during install: $_"
-    exit 1  # Failure
+    Write-Error "Install error: $_"
+    exit 1
 }
